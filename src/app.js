@@ -2,13 +2,14 @@ const express = require('express');
 
 const app = express();
 
+app.get("/user",(req,res)=>{
+    res.send({firstName:"Akshay",lastName:"Kumar"});
+})
+
 app.use("/hello",(req,res)=>{
     res.send("Hello hello hello....");
 })
 
-app.use("/",(req,res)=>{
-    res.send("Hello the server");
-})
 
 
 app.listen(3000,()=>{
