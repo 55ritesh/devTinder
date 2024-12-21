@@ -2,21 +2,28 @@ const express = require('express');
 
 const app = express();
 
-// app.get("/user",(req,res)=>{
-//     res.send({firstName:"Akshay",lastName:"Kumar"});
+const {adminAuth,userAuth} = require('./middlewares/auth');
+
+//Handle auth middleware for all GET,POST.... request
+app.use("/admin",adminAuth);
+
+// app.use("/user",(req,res)=>{
+//     res.send("user Data send");
 // })
 
-app.use("/hello",(req,res,next)=>{
-    console.log("Hello");
-    next();
-    res.send("Hello hello hello....");
-  
-},(req,res)=>{
-    console.log("Hello world");
-    res.send("Hello .....");
-},(req,res)=>{
-    console.log("hello nhi karna hai");
+
+app.use("/user",userAuth,(req,res)=>{
+    res.send("user Data send");
 })
+
+app.get("/admin/getAllData",(req,res)=>{
+    res.send("All data sent");
+});
+
+app.get("/admin/deleteAllUser",(req,res)=>{
+    res.send("Deleted a user");
+});
+
 
 
 
