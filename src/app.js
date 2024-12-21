@@ -1,28 +1,27 @@
 const express = require('express');
+require('./config/database');
+const User = require('./models/user');
 
 const app = express();
 
-const {adminAuth,userAuth} = require('./middlewares/auth');
+app.post('/signup',async (req,res)=>{
+    const userObj={
+        firstName:"Ritesh",
+        lastName:"Kumar",
+        emailId:"riteshk@gmail.com",
+        password:"12345"
+    }
 
-//Handle auth middleware for all GET,POST.... request
-app.use("/admin",adminAuth);
+    const user = new User(userObj);
 
-// app.use("/user",(req,res)=>{
-//     res.send("user Data send");
-// })
-
-
-app.use("/user",userAuth,(req,res)=>{
-    res.send("user Data send");
+    try{
+        await user.save();
+        res.send("User added successfully");
+    }catch(err){
+        req.status(400).send("Err saving the user"+err.message);
+    }
+    
 })
-
-app.get("/admin/getAllData",(req,res)=>{
-    res.send("All data sent");
-});
-
-app.get("/admin/deleteAllUser",(req,res)=>{
-    res.send("Deleted a user");
-});
 
 
 
