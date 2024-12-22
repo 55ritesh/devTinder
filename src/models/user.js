@@ -49,7 +49,7 @@ const userSchema = mongoose.Schema({
        default:"Default description"
     },
     photoUrl:{
-        type:[String],
+        type:String,
         validate(value){
             if(!validator.isURL(value)){
                 throw new Error("Enter valid URL"+value);

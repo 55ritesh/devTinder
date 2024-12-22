@@ -1,13 +1,15 @@
 const express = require('express');
 require('./config/database');
 const User = require('./models/user');
+const {validateSignUpData} = require('./utils/validation');
+const bcrypt = require('bcrypt');
 
 const app = express();
 
 app.use(express.json());
 
 app.post('/signup',async (req,res)=>{
-    console.log(req.body);
+    // console.log(req.body);
     // const userObj={
     //     firstName:"Ritesh",
     //     lastName:"Kumar",
@@ -15,19 +17,62 @@ app.post('/signup',async (req,res)=>{
     //     password:"12345"
     // }
 
-    const user = new User(req.body);
-
     try{
+    // validation of data
+     validateSignUpData(req);
+  
+    // encrypt the password
+
+    const {firstName,lastName,emailId,password}=req.body;
+    const passwordHash = await bcrypt.hash(password,10);
+    // console.log(passwordHash);
+
+    // create new instance of user model
+   // const user = new User(req.body);
+
+    const user = new User({
+        firstName,
+        lastName,
+        emailId,
+        password:passwordHash,
+    });
+
+    
         await user.save();
         res.send("User added successfully");
     }catch(err){
-        res.status(400).send("Err saving the user"+err.message);
+        res.status(400).send("ERROR:"+err.message);
     }
     
 })
 
-// Feed API - GET /feed - get all the users for the database
 
+//login api
+
+app.post('/login',async (req,res)=>{
+      try{
+    const {emailId,password} = req.body;
+
+    const user = await User.findOne({emailId:emailId});
+
+    if(!user){
+        throw new Error("Invalid credential");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password,user.password);
+
+    if(isPasswordValid){
+        res.send("Login successful");
+    }else{
+        throw new Error("Invalid credential");
+    }
+   }
+   catch(err){
+    res.status(400).send("ERROR: "+err.message);
+   }
+})
+
+// Feed API - GET /feed - get all the users for the database
 app.get('/feed',async (req,res)=>{
 
     try{
