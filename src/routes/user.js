@@ -1,6 +1,8 @@
 const express = require('express');
 const { userAuth } = require('../middlewares/auth');
 const ConnectionRequestModel = require('../models/connectionRequest');
+const { set } = require('mongoose');
+const User = require('../models/user');
 
 const userRouter = express.Router();
 
@@ -54,6 +56,58 @@ userRouter.get("/user/connections",userAuth,async (req,res)=>{
         })
     }
     catch(err){
+        res.status(400).send("ERROR: "+err.message);
+    }
+})
+
+
+userRouter.get("/feed",userAuth,async (req,res)=>{
+ // /feed?page=2&limit=10
+
+    try{
+
+       //User should see all the user card except
+       // his own card
+       // his connections
+       // ignored people
+       // already sent the connection request
+
+       const loggedInUser = req.user;
+
+       // pagination
+
+       const page = parse(req.query.page) || 1;
+       let limit = parse(req.query.limit) || 10;
+       limit = (limit>50)?50:limit;
+       const skip = (page-1)*limit;
+
+       // find all connection requests(sent+received)
+
+       const connectionRequestModel = await ConnectionRequestModel.find({
+        $or:[{fromUserId:loggedInUser._id},{toUserId:loggedInUser._id}],
+       }).select("fromUserId toUserId");
+
+
+
+        const hideUserFromFeed=new Set();
+        connectionRequestModel.forEach((req)=>{
+            hideUserFromFeed.add(req.fromUserId.toString());
+            hideUserFromFeed.add(req.toUserId.toString());
+        });
+
+
+        const users = await User.find({
+            $and:[
+            {_id:{$nin: Array.from(hideUserFromFeed)}},
+            {_id:{$ne:loggedInUser._id}}
+            ]
+        }).select("firstName lastName photoUrl skills about").skip(skip).limit(limit);
+
+
+       res.send(users);
+
+
+    }catch(err){
         res.status(400).send("ERROR: "+err.message);
     }
 })
